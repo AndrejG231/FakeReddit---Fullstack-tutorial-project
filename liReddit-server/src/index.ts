@@ -1,6 +1,14 @@
-console.log("Hello lorld");
-/*
-Tutorial project using technologies: React - TypeScript - GraphQL - URQL/Apollo - Node.js - PostgreSQL - MikroORM/TypeORM - Redis - Next.js - TypeGraphQL - Chakra. Guided by Ben Awad.
+import { MikroORM } from '@mikro-orm/core';
+import { __prod__ } from './constants';
+import { Post } from './entities/Post';
+import { microConfig } from './mikro-orm.config';
 
-liReddit---Fullstack-React-GraphQL-TypeScript-Tutorial
-*/
+const main = async () => {
+    const orm = await MikroORM.init(microConfig);
+
+    const post = orm.em.create(Post, {title: 'my first post'})
+    await orm.em.persistAndFlush(post);
+    console.log('works')
+};
+
+//main()
