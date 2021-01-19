@@ -129,7 +129,6 @@ export class UserResolver {
       };
     }
 
-    
     req.session.userId = user.id;
 
     return {
@@ -141,7 +140,6 @@ export class UserResolver {
   logout(@Ctx() { req, res }: MyContext) {
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
-        console.log("CLEARING COOKIE ", resolve)
         res.clearCookie(LOGIN_COOKIE);
         if (err) {
           console.log(err);
