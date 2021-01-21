@@ -9,7 +9,7 @@ import { HelloResolver, PostResolver, UserResolver } from "./resolvers";
 import redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
-import cors from 'cors';
+import cors from "cors";
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
@@ -19,26 +19,26 @@ const main = async () => {
 
   let RedisStore = connectRedis(session);
   let redisClient = redis.createClient();
-  
+
   app.use(
     cors({
       origin: "http://localhost:3000",
       credentials: true,
     })
   );
-  
+
   app.use(
     session({
       name: LOGIN_COOKIE,
       store: new RedisStore({
         client: redisClient,
-        disableTouch: true
+        disableTouch: true,
       }),
       cookie: {
         maxAge: 525600000, //1 year
         httpOnly: true,
         secure: __prod__,
-        sameSite: 'lax',
+        sameSite: "lax",
       },
       saveUninitialized: false,
       secret: "abcdefghijkl",
@@ -51,13 +51,13 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({req, res}) => ({ em: orm.em, req, res }),
+    context: ({ req, res }) => ({ em: orm.em, req, res }),
   });
 
   apolloServer.applyMiddleware({ app, cors: false });
 
   app.listen(4000, () => {
-    console.log("server started on localhost:4000");  
+    console.log("server started on localhost:4000");
   });
 };
 
