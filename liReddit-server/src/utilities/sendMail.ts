@@ -1,18 +1,33 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
-export const sendMail = (to: string, html: string) => {
+const result = dotenv.config({path: "../../.env"});
+
+export const sendMail = (to: string, subject: string, html: string) => {
+  let USER: string;
+  let PASSWORD: string;
+
+  if(result.parsed){
+    USER = result.parsed.EMAIL_CREDENTIALS_USERNAME;
+    PASSWORD = result.parsed.EMAIL_CREDENTIALS_PASSWORD;
+  } else {
+    [USER, PASSWORD] = ["",""];
+  }
+
+  console.log(USER, PASSWORD);
+  
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "ag.office.code",
-      pass: "<-- Password -->",
+      user: USER,
+      pass: PASSWORD,
     },
   });
 
   let mailOptions = {
     from: "Test Account ",
     to: to,
-    subject: "Testing",
+    subject: "No-reply " + subject,
     html: html,
   };
 
