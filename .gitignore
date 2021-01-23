@@ -106,5 +106,7 @@ dist
 #compiled Typescript
 liReddit-server/dist/
 
-#hidden files
-.env
+#hiddenFiles
+_sendMail.ts
+
+
