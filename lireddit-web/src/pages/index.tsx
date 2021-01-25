@@ -6,7 +6,7 @@ import { usePostsQuery } from "../generated/graphql";
 const Index = () => {
   const [{ data }] = usePostsQuery({
     variables: {
-      limit: 10,
+      limit: 40,
     }
   });
   return (
