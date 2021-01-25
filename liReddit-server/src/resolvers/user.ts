@@ -12,7 +12,7 @@ import { User } from "../entities/User";
 import argon2 from "argon2";
 import { LOGIN_COOKIE, FORGET_PASSWORD_PREFIX } from "../constants";
 import { validateRegister } from "../utilities/validateRegister";
-import { sendMail } from "../utilities/sendMail";
+import { sendMail } from "../utilities/_sendMail";
 import { v4 } from "uuid";
 import { getConnection } from "typeorm";
 
@@ -117,6 +117,8 @@ export class UserResolver {
       "Password Reset",
       `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
     );
+
+    console.log("Password reset")
 
     return true;
   }
