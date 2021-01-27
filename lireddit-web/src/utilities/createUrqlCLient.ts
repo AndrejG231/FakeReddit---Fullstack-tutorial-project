@@ -53,7 +53,7 @@ export const cursorPagination = (): Resolver => {
       results.push(...data);
     });
 
-    return results;
+    return {hasMore: true, posts: results};
   };
 };
 
