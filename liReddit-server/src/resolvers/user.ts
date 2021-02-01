@@ -6,6 +6,8 @@ import {
   Ctx,
   ObjectType,
   Query,
+  FieldResolver,
+  Root,
 } from "type-graphql";
 import { MyContext, UsernamePasswordInput } from "../types";
 import { User } from "../entities/User";
@@ -33,8 +35,16 @@ class UserResponse {
   user?: User;
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
+    if (req.session.userId === user.id) {
+      return user.email;
+    }
+    return "";
+  }
+
   @Mutation(() => UserResponse)
   async changePassword(
     @Arg("token") token: string,
@@ -118,7 +128,7 @@ export class UserResolver {
       `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
     );
 
-    console.log("Password reset")
+    console.log("Password reset");
 
     return true;
   }
@@ -181,7 +191,6 @@ export class UserResolver {
 
     return { user };
   }
-
 
   @Mutation(() => UserResponse)
   async login(
