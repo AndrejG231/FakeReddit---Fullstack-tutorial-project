@@ -33,7 +33,6 @@ class PaginatedPosts {
   hasMore: boolean;
 }
 
-
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
@@ -122,9 +121,42 @@ export class PostResolver {
     };
   }
 
+  @Query(() => Number)
+  @UseMiddleware(isAuth)
+  async voted(@Arg("postId") postId: number, @Ctx() { req }: MyContext) {
+    const userId = await req.session.userId;
+    const votedValue = await getConnection().query(
+      `
+      select value from upvote
+      where "userId" = ${userId} and "postId" = ${postId}
+      `
+    );
+    
+    if (typeof votedValue[0] !== 'undefined') {
+      return votedValue[0].value;
+    }
+    return 0;
+  }
+
   @Query(() => Post, { nullable: true })
   async post(@Arg("id") id: number): Promise<Post | undefined> {
-    return Post.findOne(id);
+    const post = await getConnection().query(
+      `
+    select p.*,
+    json_build_object(
+      'id', u.id,
+      'username', u.username,
+      'email',u.email
+     ) creator
+    from post p
+    inner join public.user u on u.id = p."creatorId"
+    where p."id" = ${id}
+    order by p."createdAt" DESC
+    `
+    );
+    
+    console.log(post)
+    return post[0]
   }
 
   @Mutation(() => Post)

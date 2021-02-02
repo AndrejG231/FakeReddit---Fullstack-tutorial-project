@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useState } from "react";
-import { PostComponent } from "../components/PostComponent";
+import PostComponent from "../components/PostComponent";
 
 const Index = () => {
   const [variables, setVariables] = useState({

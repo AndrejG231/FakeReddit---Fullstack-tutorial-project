@@ -18,6 +18,7 @@ export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   posts: PaginatedPosts;
+  voted: Scalars['Float'];
   post?: Maybe<Post>;
   me?: Maybe<User>;
 };
@@ -26,6 +27,11 @@ export type Query = {
 export type QueryPostsArgs = {
   cursor?: Maybe<Scalars['String']>;
   limit: Scalars['Int'];
+};
+
+
+export type QueryVotedArgs = {
+  postId: Scalars['Float'];
 };
 
 
@@ -265,6 +271,23 @@ export type MeQuery = (
   )> }
 );
 
+export type PostQueryVariables = Exact<{
+  id: Scalars['Float'];
+}>;
+
+
+export type PostQuery = (
+  { __typename?: 'Query' }
+  & { post?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title' | 'points' | 'text'>
+    & { creator: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'username'>
+    ) }
+  )> }
+);
+
 export type PostsQueryVariables = Exact<{
   limit: Scalars['Int'];
   cursor?: Maybe<Scalars['String']>;
@@ -281,6 +304,16 @@ export type PostsQuery = (
       & PostSnippetFragment
     )> }
   ) }
+);
+
+export type VotedQueryVariables = Exact<{
+  postId: Scalars['Float'];
+}>;
+
+
+export type VotedQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'voted'>
 );
 
 export const PostSnippetFragmentDoc = gql`
@@ -408,6 +441,26 @@ export const MeDocument = gql`
 export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
 };
+export const PostDocument = gql`
+    query Post($id: Float!) {
+  post(id: $id) {
+    id
+    createdAt
+    updatedAt
+    title
+    points
+    text
+    creator {
+      id
+      username
+    }
+  }
+}
+    `;
+
+export function usePostQuery(options: Omit<Urql.UseQueryArgs<PostQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<PostQuery>({ query: PostDocument, ...options });
+};
 export const PostsDocument = gql`
     query Posts($limit: Int!, $cursor: String) {
   posts(cursor: $cursor, limit: $limit) {
@@ -421,4 +474,13 @@ export const PostsDocument = gql`
 
 export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
+};
+export const VotedDocument = gql`
+    query Voted($postId: Float!) {
+  voted(postId: $postId)
+}
+    `;
+
+export function useVotedQuery(options: Omit<Urql.UseQueryArgs<VotedQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<VotedQuery>({ query: VotedDocument, ...options });
 };

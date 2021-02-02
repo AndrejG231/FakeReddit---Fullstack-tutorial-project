@@ -1,0 +1,3 @@
+query Voted($postId: Float!) {
+  voted(postId: $postId)
+}
