@@ -45,21 +45,24 @@ export const cursorPagination = (): Resolver => {
       return undefined;
     }
     const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
-    const isInCache = cache.resolve(cache.resolve(entityKey, fieldKey) as string, "posts");
+    const isInCache = cache.resolve(
+      cache.resolve(entityKey, fieldKey) as string,
+      "posts"
+    );
     info.partial = !isInCache;
     let hasMore = true;
     const results: string[] = [];
     fieldInfos.forEach((fi) => {
       const key = cache.resolve(entityKey, fi.fieldKey) as string;
-      const data = cache.resolve(key, 'posts') as string[];
-      const _hasMore = cache.resolve(key, 'hasMore');
-      if(!_hasMore){
+      const data = cache.resolve(key, "posts") as string[];
+      const _hasMore = cache.resolve(key, "hasMore");
+      if (!_hasMore) {
         hasMore = _hasMore as boolean;
       }
       results.push(...data);
     });
 
-    return {__typename: "PaginatedPosts",hasMore, posts: results};
+    return { __typename: "PaginatedPosts", hasMore, posts: results };
   };
 };
 
@@ -72,7 +75,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
     dedupExchange,
     cacheExchange({
       keys: {
-        PaginatedPosts: () => null
+        PaginatedPosts: () => null,
       },
       resolvers: {
         Query: {
@@ -81,6 +84,15 @@ export const createUrqlClient = (ssrExchange: any) => ({
       },
       updates: {
         Mutation: {
+          createPost: (_result, args, cache, info) => {
+            const allFields = cache.inspectFields("Query");
+            const fieldInfos = allFields.filter(
+              (info) => info.fieldName === "posts"
+            );
+            fieldInfos.forEach((fi) => {
+              cache.invalidate("Query", "posts", fi.arguments || {});
+            });
+          },
           logout: (_result, args, cache, info) => {
             betterUpdateQuery<LogoutMutation, MeQuery>(
               cache,

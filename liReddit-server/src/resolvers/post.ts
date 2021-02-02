@@ -33,6 +33,7 @@ class PaginatedPosts {
   hasMore: boolean;
 }
 
+
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
@@ -40,7 +41,7 @@ export class PostResolver {
     return post.text.slice(0, 50);
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Number)
   @UseMiddleware(isAuth)
   async vote(
     @Arg("postId", () => Int) postId: number,
@@ -48,24 +49,40 @@ export class PostResolver {
     @Ctx() { req }: MyContext
   ) {
     const userId = req.session.userId;
-    const realValue = value ? 1 : -1;
+    const realValue = value > 0 ? 1 : -1;
+    let updateValue = 0;
 
-    await Upvote.insert({
-      userId,
-      postId,
-      value: realValue,
-    });
+    const upvote = await Upvote.findOne({ where: { postId, userId } });
+    if (upvote && upvote.value !== realValue) {
+      updateValue = realValue * 2;
+      await getConnection().query(
+        `
+    START TRANSACTION;
+    update upvote
+    set value = ${realValue}
+    where "postId" = ${postId} and "userId" = ${userId};
 
-    await getConnection().query(
-      `
-    update post p
-    set p.points = p.points + $1
-    where p.id = $2
-    `,
-      [realValue, postId]
-    );
-
-    return true;
+    update post
+    set points = points + ${updateValue}
+    where id = ${postId};
+    COMMIT;
+    `
+      );
+    } else if (!upvote) {
+      updateValue = realValue;
+      await getConnection().query(
+        `
+    START TRANSACTION;
+    insert into upvote ("userId", "postId", value)
+    values (${userId},${postId},${realValue});
+    update post
+    set points = points + ${updateValue}
+    where id = ${postId};
+    COMMIT;
+    `
+      );
+    }
+    return updateValue;
   }
 
   @Query(() => PaginatedPosts)
