@@ -15,7 +15,7 @@ import {
   ObjectType,
 } from "type-graphql";
 import { Post, Upvote } from "../entities";
-import { getConnection } from "typeorm";
+import { DeleteResult, getConnection } from "typeorm";
 
 @InputType()
 class PostInput {
@@ -131,8 +131,8 @@ export class PostResolver {
       where "userId" = ${userId} and "postId" = ${postId}
       `
     );
-    
-    if (typeof votedValue[0] !== 'undefined') {
+
+    if (typeof votedValue[0] !== "undefined") {
       return votedValue[0].value;
     }
     return 0;
@@ -154,9 +154,9 @@ export class PostResolver {
     order by p."createdAt" DESC
     `
     );
-    
-    console.log(post)
-    return post[0]
+
+    console.log(post);
+    return post[0];
   }
 
   @Mutation(() => Post)
@@ -172,23 +172,42 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async updatePost(
-    @Arg("id") id: number,
-    @Arg("title", () => String, { nullable: true }) title: string
+    @Arg("id", () => Int) id: number,
+    @Arg("title", () => String) title: string,
+    @Arg('text', () => String) text: string,
+    @Ctx() {req}: MyContext
   ): Promise<Post | null> {
-    const post = await Post.findOne(id);
-    if (!post) {
-      return null;
-    }
-    if (typeof title !== "undefined") {
-      await Post.update({ id }, { title });
-    }
-    return post;
+    const post = await getConnection()
+    .createQueryBuilder()
+    .update(Post)
+    .set({title, text})
+    .where(`id = :id and "creatorId" = :creatorId`, {id, creatorId: req.session.userId})
+    .returning('*')
+    .execute()
+
+    return post.raw[0]
   }
 
-  @Mutation(() => Boolean)
-  async deletePost(@Arg("id") id: number): Promise<boolean> {
-    await Post.delete(id);
-    return true;
+  @Mutation(() => Number)
+  @UseMiddleware(isAuth)
+  async deletePost(
+    @Arg("id", () => Int ) id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<number> {
+    const userId = await req.session.userId
+    const output = await Post.delete({id, creatorId: userId});
+
+    if(typeof output.affected === 'number'){
+
+      if(output.affected === 1){
+        await Upvote.delete({postId: id})
+      }
+
+      return output.affected
+    }
+
+    return 0
   }
 }
